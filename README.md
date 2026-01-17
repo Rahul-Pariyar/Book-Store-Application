@@ -57,7 +57,8 @@ A simple and minimal online bookstore application with JWT-based authentication 
 3. Cart Functionality
    - Cart data persisted in localStorage
    - Cart context manages state across app
-   - Quantity updates with inventory check during checkout
+- Cart context manages state across app
+- Quantity updates with inventory check during checkout
 
 4. Order Processing
    - Inventory management (reduces stock on order)
