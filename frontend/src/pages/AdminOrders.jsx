@@ -15,6 +15,7 @@ export default function AdminOrders() {
       const response = await getAllOrders();
       setOrders(response.data);
     } catch (err) {
+      console.log(err);
       setError('Failed to fetch orders');
     } finally {
       setLoading(false);

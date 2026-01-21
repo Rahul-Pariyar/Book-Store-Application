@@ -43,7 +43,7 @@ export default function Signup() {
         position: 'top-right',
         autoClose: 2000,
       });
-      navigate('/');
+      navigate('/login');
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Signup failed';
       setError(errorMsg);
