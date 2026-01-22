@@ -115,9 +115,14 @@ export default function Home() {
               className="card animate-fadeInUp"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-5xl">📖</span>
+              <div className="h-48 rounded-lg mb-4 overflow-hidden">
+                <img
+                  src={book.image?.url || "https://via.placeholder.com/400x300"}
+                  alt={book.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
+
 
               <div className="flex-grow">
                 <h3 className="text-xl font-bold text-gray-800 mb-1 truncate">{book.title}</h3>

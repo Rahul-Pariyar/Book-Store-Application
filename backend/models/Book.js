@@ -29,12 +29,18 @@ const bookSchema = new mongoose.Schema(
     },
     isbn: {
       type: String,
-      unique: true,
-      sparse: true,
+      
     },
-    imageUrl: {
-      type: String,
-    },
+    image:{
+      url:{
+        type:String,
+        required:true
+      },
+      publicId:{
+        type:String,
+        required:true
+      }
+    }
   },
   { timestamps: true }
 );

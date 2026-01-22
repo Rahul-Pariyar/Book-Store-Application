@@ -1,4 +1,5 @@
 import Book from '../models/Book.js';
+import cloudinary from "../config/cloudinaryConfig.js";
 
 export const getBooks = async (req, res) => {
   try {
@@ -23,11 +24,33 @@ export const getBookById = async (req, res) => {
 
 export const createBook = async (req, res) => {
   try {
-    const { title, author, description, price, quantity, category, isbn, imageUrl } = req.body;
+    const { title, author, description, price, quantity, category, isbn, image } = req.body;
+    const file=req.file;
 
     if (!title || !author || !description || !price || !category) {
       return res.status(400).json({ message: 'Required fields are missing' });
     }
+
+    if(!file){
+      return res.status(400).json({ message: "Image is required" });
+    }
+
+    const uploadImage=await new Promise((resolve,reject)=>{
+      const stream=cloudinary.uploader.upload_stream(
+        {
+          folder: "properties",
+          transformation: [
+            { width: 800, height: 600, crop: "fill" },
+            { fetch_format: "auto" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          resolve(result);
+        }
+      )
+      stream.end(file.buffer);
+  })
 
     const book = await Book.create({
       title,
@@ -37,11 +60,15 @@ export const createBook = async (req, res) => {
       quantity,
       category,
       isbn,
-      imageUrl,
+      image:{
+        url:uploadImage.secure_url,
+        publicId:uploadImage.public_id
+      }
     });
 
     res.status(201).json({ message: 'Book created successfully', book });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: 'Error creating book', error: error.message });
   }
 };
