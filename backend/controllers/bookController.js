@@ -95,6 +95,14 @@ export const updateBook = async (req, res) => {
 
 export const deleteBook = async (req, res) => {
   try {
+    const isBookOrdered = await Order.exists({ "items.book": req.params.id });
+
+    if (isBookOrdered) {
+      return res.status(400).json({
+        message: "This book is already ordered and cannot be deleted"
+      });
+    }
+
     const book = await Book.findByIdAndDelete(req.params.id);
     if (!book) {
       return res.status(404).json({ message: 'Book not found' });
