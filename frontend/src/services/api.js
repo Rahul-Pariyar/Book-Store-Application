@@ -70,4 +70,8 @@ export const updateUser = (id, userData) => api.put(`/users/${id}`, userData);
 
 export const deleteUser = (id) => api.delete(`/users/${id}`);
 
+
+export const updateProfile = (id, data) => api.put(`/updateProfile/${id}`, data);
+
+
 export default api;

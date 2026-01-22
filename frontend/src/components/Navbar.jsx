@@ -68,12 +68,13 @@ export default function Navbar() {
 
           {isAuthenticated ? (
             <div className="flex gap-4 items-center border-l border-blue-400 pl-8">
-              <div className="text-sm">
-                <p className="font-semibold">👤 {user?.name}</p>
-                <p className="text-blue-100 text-xs">
-                  {user?.role === 'admin' ? '⭐ Admin' : '🛍️ Buyer'}
-                </p>
-              </div>
+              <Link
+                to="/profile"
+                className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+              >
+                👤 Profile
+              </Link>
+
               <button
                 onClick={handleLogout}
                 className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-medium transition-colors btn-hover"

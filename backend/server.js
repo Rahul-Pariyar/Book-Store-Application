@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import bookRoutes from './routes/books.js';
 import orderRoutes from './routes/orders.js';
 import userRoutes from './routes/users.js';
+import updateProfileRoutes from './routes/updateProfile.js';
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +27,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/updateProfile',updateProfileRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
