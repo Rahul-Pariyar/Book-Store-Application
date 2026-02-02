@@ -23,8 +23,8 @@ api.interceptors.request.use(
 );
 
 // Auth APIs
-export const signup = (name, email, password, role = 'buyer') =>
-  api.post('/auth/signup', { name, email, password, role });
+export const signup = (name, email, password) =>
+  api.post('/auth/signup', { name, email, password });
 
 export const login = (email, password) =>
   api.post('/auth/login', { email, password });
@@ -60,6 +60,8 @@ export const getAllOrders = () => api.get('/orders');
 
 export const updateOrderStatus = (id, orderStatus) =>
   api.put(`/orders/${id}/status`, { orderStatus });
+
+export const verifyKhaltiPayment = (pidx) => api.post('/orders/verify-payment', { pidx });
 
 // User APIs
 export const getAllUsers = () => api.get('/users');

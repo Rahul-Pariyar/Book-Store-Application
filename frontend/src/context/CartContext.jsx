@@ -1,12 +1,22 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(() => {
-    const storedCart = localStorage.getItem('cart');
-    return storedCart ? JSON.parse(storedCart) : [];
-  });
+  const { user } = useAuth();
+  const [cart, setCart] = useState([]);
+
+  // Get user-specific cart key
+  const getCartKey = () => {
+    return user ? `cart_${user._id || user.id}` : 'cart_guest';
+  };
+
+  // Load cart from localStorage on user change
+  useEffect(() => {
+    const storedCart = localStorage.getItem(getCartKey());
+    setCart(storedCart ? JSON.parse(storedCart) : []);
+  }, [user]);
 
   const addToCart = useCallback((book) => {
     setCart((prevCart) => {
@@ -23,18 +33,18 @@ export const CartProvider = ({ children }) => {
         updatedCart = [...prevCart, { ...book, quantity: 1 }];
       }
 
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      localStorage.setItem(getCartKey(), JSON.stringify(updatedCart));
       return updatedCart;
     });
-  }, []);
+  }, [user]);
 
   const removeFromCart = useCallback((bookId) => {
     setCart((prevCart) => {
       const updatedCart = prevCart.filter((item) => item._id !== bookId);
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      localStorage.setItem(getCartKey(), JSON.stringify(updatedCart));
       return updatedCart;
     });
-  }, []);
+  }, [user]);
 
   const updateQuantity = useCallback((bookId, quantity) => {
     if (quantity <= 0) {
@@ -46,15 +56,15 @@ export const CartProvider = ({ children }) => {
       const updatedCart = prevCart.map((item) =>
         item._id === bookId ? { ...item, quantity } : item
       );
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      localStorage.setItem(getCartKey(), JSON.stringify(updatedCart));
       return updatedCart;
     });
-  }, [removeFromCart]);
+  }, [user, removeFromCart]);
 
   const clearCart = useCallback(() => {
     setCart([]);
-    localStorage.removeItem('cart');
-  }, []);
+    localStorage.removeItem(getCartKey());
+  }, [user]);
 
   const getTotalPrice = useCallback(() => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);

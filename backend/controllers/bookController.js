@@ -75,11 +75,12 @@ export const createBook = async (req, res) => {
 
 export const updateBook = async (req, res) => {
   try {
-    const { title, author, description, price, quantity, category, isbn, imageUrl } = req.body;
+    // const { title, author, description, price, quantity, category, isbn, imageUrl } = req.body;
+    const data = req.body;
 
     const book = await Book.findByIdAndUpdate(
       req.params.id,
-      { title, author, description, price, quantity, category, isbn, imageUrl },
+     data,
       { new: true, runValidators: true }
     );
 
@@ -89,6 +90,7 @@ export const updateBook = async (req, res) => {
 
     res.json({ message: 'Book updated successfully', book });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: 'Error updating book', error: error.message });
   }
 };

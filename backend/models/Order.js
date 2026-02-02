@@ -24,24 +24,32 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+    deliveryAddress: {
+      type: String,
+      required: true,
+    },
+     paymentMethod: {
+      type: String,
+      enum: ['COD','KHALTI'],
+      default: 'COD',
+    },
     totalAmount: {
       type: Number,
       required: true,
-    },
-    paymentMethod: {
-      type: String,
-      enum: ['cash_on_delivery'],
-      default: 'cash_on_delivery',
     },
     orderStatus: {
       type: String,
       enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
-    deliveryAddress: {
-      type: String,
-      required: true,
+    paymentStatus:{
+      type:String,
+      enum:['unpaid','paid','failed'],
+      default:'unpaid'
     },
+    pidx:{
+      type:String,
+    }
   },
   { timestamps: true }
 );

@@ -17,7 +17,7 @@ router.get('/:id', getBookById);
 
 // Admin routes
 router.post('/', verifyToken, authorize('admin'), upload.single("image"), createBook);
-router.put('/:id', verifyToken, authorize('admin'), updateBook);
+router.put('/:id', verifyToken, authorize('admin'), upload.single("image"), updateBook);
 router.delete('/:id', verifyToken, authorize('admin'), deleteBook);
 
 export default router;

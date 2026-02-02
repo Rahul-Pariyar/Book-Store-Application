@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('COD');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -31,15 +32,29 @@ export default function Cart() {
           quantity: item.quantity,
         })),
         deliveryAddress,
+        paymentMethod,
       };
 
-      await createOrder(orderData);
-      clearCart();
-      toast.success('✅ Order placed successfully!', {
-        position: 'top-right',
-        autoClose: 2000,
-      });
-      navigate('/my-orders');
+      const response = await createOrder(orderData);
+
+      if (paymentMethod === 'KHALTI') {
+        // Redirect to Khalti payment page
+        if (response.data.payment_url) {
+          toast.success('Redirecting to Khalti payment...', {
+            position: 'top-right',
+            autoClose: 2000,
+          });
+          window.location.href = response.data.payment_url;
+        }
+      } else {
+        // COD - Order placed successfully
+        clearCart();
+        toast.success('✅ Order placed successfully!', {
+          position: 'top-right',
+          autoClose: 2000,
+        });
+        navigate('/my-orders');
+      }
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to place order';
       setError(errorMsg);
@@ -192,12 +207,42 @@ export default function Cart() {
                 </span>
               </div>
             </div>
+          
+            {/* Payment Method Selection */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <p className="font-semibold text-gray-800 mb-3">💳 Select Payment Method</p>
+              
+              {/* Cash on Delivery Option */}
+              <label className="flex items-center p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:shadow-md transition-all duration-200" style={{ borderLeft: paymentMethod === 'COD' ? '4px solid #3b82f6' : '' }}>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="COD"
+                  checked={paymentMethod === 'COD'}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-4 h-4 accent-blue-600"
+                />
+                <div className="ml-3 flex-1">
+                  <p className="font-semibold text-gray-800">💵 Cash on Delivery</p>
+                  <p className="text-xs text-gray-600">Pay when your order arrives</p>
+                </div>
+              </label>
 
-            {/* Payment Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <span className="font-semibold">💳 Payment Method:</span> Cash on Delivery
-              </p>
+              {/* Khalti Payment Option */}
+              <label className="flex items-center p-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:border-purple-500 hover:shadow-md transition-all duration-200" style={{ borderLeft: paymentMethod === 'KHALTI' ? '4px solid #9333ea' : '' }}>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="KHALTI"
+                  checked={paymentMethod === 'KHALTI'}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-4 h-4 accent-purple-600"
+                />
+                <div className="ml-3 flex-1">
+                  <p className="font-semibold text-gray-800">🎯 Pay with Khalti</p>
+                  <p className="text-xs text-gray-600">Fast and secure online payment</p>
+                </div>
+              </label>
             </div>
 
             <button
@@ -210,6 +255,8 @@ export default function Cart() {
                   <span className="spinner"></span>
                   Processing...
                 </>
+              ) : paymentMethod === 'KHALTI' ? (
+                <>🎯 Pay with Khalti</>
               ) : (
                 <>✓ Place Order</>
               )}
