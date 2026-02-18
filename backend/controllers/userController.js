@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import { getIO } from '../config/socketConfig.js';
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -35,6 +36,14 @@ export const updateUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Emit user update to admins only
+    try {
+      const io = getIO();
+      io.to('admins').emit('user-updated', user);
+    } catch (err) {
+      console.log('Socket emit failed:', err.message);
+    }
+
     res.json({ message: 'User updated successfully', user });
   } catch (error) {
     res.status(500).json({ message: 'Error updating user', error: error.message });
@@ -47,6 +56,15 @@ export const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Emit user deletion to admins only
+    try {
+      const io = getIO();
+      io.to('admins').emit('user-deleted', { id: req.params.id });
+    } catch (err) {
+      console.log('Socket emit failed:', err.message);
+    }
+
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting user', error: error.message });

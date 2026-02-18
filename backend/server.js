@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import { connectDB } from './config/db.js';
+import { initSocket } from './config/socketConfig.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -14,6 +16,10 @@ import updateProfileRoutes from './routes/updateProfile.js';
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.IO with authentication
+initSocket(httpServer);
 
 // Middleware
 app.use(cors());
@@ -36,6 +42,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Socket.IO initialized`);
 });

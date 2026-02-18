@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Book from '../models/Book.js';
 import axios from 'axios';
+import { getIO } from '../config/socketConfig.js';
 
 export const createOrder = async (req, res) => {
   try {
@@ -32,8 +33,21 @@ export const createOrder = async (req, res) => {
     }
 
     if(paymentMethod=='COD'){
+      // Update book quantities and emit book updates
       for (const item of orderItems) {
-      await Book.findByIdAndUpdate(item.book, { $inc: { quantity: -item.quantity } });
+        const updatedBook = await Book.findByIdAndUpdate(
+          item.book,
+          { $inc: { quantity: -item.quantity } },
+          { new: true }
+        );
+        
+        // Emit book stock update to all users
+        try {
+          const io = getIO();
+          io.emit('book-updated', updatedBook);
+        } catch (err) {
+          console.log('Socket emit failed:', err.message);
+        }
       }
 
       const order = await Order.create({
@@ -45,6 +59,17 @@ export const createOrder = async (req, res) => {
       });
 
       await order.populate('items.book');
+      await order.populate('user', 'name email');
+
+      // Emit order created event to admins and the buyer
+      try {
+        const io = getIO();
+        io.to('admins').emit('order-created', order); // Notify all admins
+        io.to(req.user.id).emit('my-order-created', order); // Notify the buyer
+      } catch (err) {
+        console.log('Socket emit failed:', err.message);
+      }
+
       res.status(201).json({ message: 'Order created successfully', order });
     }
 
@@ -124,6 +149,15 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
+    // Emit order update to admins and specific buyer
+    try {
+      const io = getIO();
+      io.to('admins').emit('order-updated', order); // Notify all admins
+      io.to(order.user._id.toString()).emit('my-order-updated', order); // Notify the buyer
+    } catch (err) {
+      console.log('Socket emit failed:', err.message);
+    }
+
     res.json({ message: 'Order status updated successfully', order });
   } catch (error) {
     res.status(500).json({ message: 'Error updating order', error: error.message });
@@ -144,12 +178,35 @@ export const verifyKhaltiPayment=async(req,res)=>{
     const khaltiVerify=await axios.post(verifyUrl,{pidx},{headers:header});
 
     if (khaltiVerify.data.status === "Completed") {
+      // Update book quantities and emit updates
       for(const item of order.items){
-        await Book.findByIdAndUpdate(item.book._id, { $inc: { quantity: -item.quantity } });
+        const updatedBook = await Book.findByIdAndUpdate(
+          item.book._id,
+          { $inc: { quantity: -item.quantity } },
+          { new: true }
+        );
+        
+        // Emit book stock update
+        try {
+          const io = getIO();
+          io.emit('book-updated', updatedBook);
+        } catch (err) {
+          console.log('Socket emit failed:', err.message);
+        }
       }
+      
       order.orderStatus="confirmed";
       order.paymentStatus="paid";
       await order.save();
+
+      // Emit order created event to admins and buyer
+      try {
+        const io = getIO();
+        io.to('admins').emit('order-created', order);
+        io.to(order.user._id.toString()).emit('my-order-created', order);
+      } catch (err) {
+        console.log('Socket emit failed:', err.message);
+      }
 
       return res.json({ message: "Payment verified and order confirmed", order });
     }else{

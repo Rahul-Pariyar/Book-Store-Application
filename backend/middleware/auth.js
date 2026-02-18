@@ -1,5 +1,11 @@
 import jwt from 'jsonwebtoken';
 
+// Utility function to verify token (used by Socket.IO)
+export const verifyTokenUtil = (token) => {
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
+// Express middleware for HTTP requests
 export const verifyToken = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -8,7 +14,7 @@ export const verifyToken = (req, res, next) => {
       return res.status(401).json({ message: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyTokenUtil(token);
     req.user = decoded;
     next();
   } catch (error) {

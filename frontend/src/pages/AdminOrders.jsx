@@ -1,14 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { getAllOrders, updateOrderStatus } from '../services/api';
+import { useSocket } from '../context/SocketContext';
+import { toast } from 'react-toastify';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { socket, connected } = useSocket();
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Socket listeners for real-time order updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('order-created', (newOrder) => {
+      setOrders((prev) => [newOrder, ...prev]);
+      toast.success(`New order received from ${newOrder.user?.name}`);
+    });
+
+    socket.on('order-updated', (updatedOrder) => {
+      setOrders((prev) =>
+        prev.map((order) =>
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+      toast.info('Order updated');
+    });
+
+    return () => {
+      socket.off('order-created');
+      socket.off('order-updated');
+    };
+  }, [socket]);
 
   const fetchOrders = async () => {
     try {

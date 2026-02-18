@@ -122,6 +122,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { SocketProvider } from './context/SocketContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/Profile';
@@ -235,23 +236,25 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <CartProvider>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={true}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            <AppContent />
-          </div>
-        </CartProvider>
+        <SocketProvider>
+          <CartProvider>
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+              <AppContent />
+            </div>
+          </CartProvider>
+        </SocketProvider>
       </AuthProvider>
     </Router>
   );

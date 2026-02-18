@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { getBooks } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 
 export default function Home() {
   const [books, setBooks] = useState([]);
@@ -11,7 +12,8 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { addToCart } = useCart();
-  const { isAuthenticated, isBuyer } = useAuth();
+  const { isAuthenticated, isBuyer, isAdmin } = useAuth();
+  const { socket, connected } = useSocket();
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -28,6 +30,32 @@ export default function Home() {
 
     fetchBooks();
   }, []);
+
+  // Socket listeners for real-time book updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('book-created', (newBook) => {
+      setBooks((prev) => [newBook, ...prev]);
+      toast.success(`New book available: ${newBook.title}`);
+    });
+
+    socket.on('book-updated', (updatedBook) => {
+      setBooks((prev) =>
+        prev.map((book) => (book._id === updatedBook._id ? updatedBook : book))
+      );
+    });
+
+    socket.on('book-deleted', ({ id }) => {
+      setBooks((prev) => prev.filter((book) => book._id !== id));
+    });
+
+    return () => {
+      socket.off('book-created');
+      socket.off('book-updated');
+      socket.off('book-deleted');
+    };
+  }, [socket]);
 
   const handleAddToCart = (book) => {
     addToCart(book);

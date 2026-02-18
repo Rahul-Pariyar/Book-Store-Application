@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getMyOrders } from '../services/api';
+import { useSocket } from '../context/SocketContext';
+import { toast } from 'react-toastify';
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { socket, connected } = useSocket();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -20,6 +23,30 @@ export default function MyOrders() {
 
     fetchOrders();
   }, []);
+
+  // Socket listeners for real-time order updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('my-order-created', (newOrder) => {
+      setOrders((prev) => [newOrder, ...prev]);
+      toast.success('Order confirmed!');
+    });
+
+    socket.on('my-order-updated', (updatedOrder) => {
+      setOrders((prev) =>
+        prev.map((order) =>
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+      toast.info(`Order status: ${updatedOrder.orderStatus}`);
+    });
+
+    return () => {
+      socket.off('my-order-created');
+      socket.off('my-order-updated');
+    };
+  }, [socket]);
 
   if (loading) return <div className="text-center py-10">Loading orders...</div>;
 

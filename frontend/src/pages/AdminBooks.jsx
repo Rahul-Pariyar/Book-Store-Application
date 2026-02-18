@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getBooks, createBook, updateBook, deleteBook } from '../services/api';
+import { useSocket } from '../context/SocketContext';
+import { toast } from 'react-toastify';
 
 export default function AdminBooks() {
   const [books, setBooks] = useState([]);
@@ -7,6 +9,7 @@ export default function AdminBooks() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const { socket, connected } = useSocket();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -22,6 +25,34 @@ export default function AdminBooks() {
   useEffect(() => {
     fetchBooks();
   }, []);
+
+  // Socket listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('book-created', (newBook) => {
+      setBooks((prev) => [newBook, ...prev]);
+      toast.success(`New book added: ${newBook.title}`);
+    });
+
+    socket.on('book-updated', (updatedBook) => {
+      setBooks((prev) =>
+        prev.map((book) => (book._id === updatedBook._id ? updatedBook : book))
+      );
+      toast.info('Book updated');
+    });
+
+    socket.on('book-deleted', ({ id }) => {
+      setBooks((prev) => prev.filter((book) => book._id !== id));
+      toast.warning('Book deleted');
+    });
+
+    return () => {
+      socket.off('book-created');
+      socket.off('book-updated');
+      socket.off('book-deleted');
+    };
+  }, [socket]);
 
   const fetchBooks = async () => {
     try {

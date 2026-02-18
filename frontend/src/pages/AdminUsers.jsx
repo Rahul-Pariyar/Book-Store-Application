@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, deleteUser, updateUser } from '../services/api';
+import { useSocket } from '../context/SocketContext';
+import { toast } from 'react-toastify';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -7,10 +9,33 @@ export default function AdminUsers() {
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const { socket, connected } = useSocket();
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Socket listeners for real-time user updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('user-updated', (updatedUser) => {
+      setUsers((prev) =>
+        prev.map((user) => (user._id === updatedUser._id ? updatedUser : user))
+      );
+      toast.info('User updated');
+    });
+
+    socket.on('user-deleted', ({ id }) => {
+      setUsers((prev) => prev.filter((user) => user._id !== id));
+      toast.warning('User deleted');
+    });
+
+    return () => {
+      socket.off('user-updated');
+      socket.off('user-deleted');
+    };
+  }, [socket]);
 
   const fetchUsers = async () => {
     try {

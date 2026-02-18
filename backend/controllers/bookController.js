@@ -1,5 +1,6 @@
 import Book from '../models/Book.js';
 import cloudinary from "../config/cloudinaryConfig.js";
+import { getIO } from '../config/socketConfig.js';
 
 export const getBooks = async (req, res) => {
   try {
@@ -66,6 +67,14 @@ export const createBook = async (req, res) => {
       }
     });
 
+    // Emit socket event to all buyers and admins
+    try {
+      const io = getIO();
+      io.emit('book-created', book); // Emit to everyone (admins and buyers)
+    } catch (err) {
+      console.log('Socket emit failed:', err.message);
+    }
+
     res.status(201).json({ message: 'Book created successfully', book });
   } catch (error) {
     console.log(error);
@@ -86,6 +95,14 @@ export const updateBook = async (req, res) => {
 
     if (!book) {
       return res.status(404).json({ message: 'Book not found' });
+    }
+
+    // Emit socket event to all buyers and admins
+    try {
+      const io = getIO();
+      io.emit('book-updated', book);
+    } catch (err) {
+      console.log('Socket emit failed:', err.message);
     }
 
     res.json({ message: 'Book updated successfully', book });
@@ -109,6 +126,15 @@ export const deleteBook = async (req, res) => {
     if (!book) {
       return res.status(404).json({ message: 'Book not found' });
     }
+
+    // Emit socket event to all buyers and admins
+    try {
+      const io = getIO();
+      io.emit('book-deleted', { id: req.params.id });
+    } catch (err) {
+      console.log('Socket emit failed:', err.message);
+    }
+
     res.json({ message: 'Book deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting book', error: error.message });
