@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { connectDB } from './config/db.js';
 import { initSocket } from './config/socketConfig.js';
+import globalErrorHandler from './middleware/errorHandler.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -36,10 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/updateProfile',updateProfileRoutes);
 
 // Error handling
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error' });
-});
+app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
